@@ -53,7 +53,7 @@ interface GetUserProfileArgs {
 // Tool definitions
 const listChannelsTool: Tool = {
   name: "slack_list_channels",
-  description: "List public and private channels in the workspace with pagination",
+  description: "List public and private channels in the workspace with pagination. Requires 'groups:read' scope for private channels.",
   inputSchema: {
     type: "object",
     properties: {
@@ -239,7 +239,14 @@ class SlackClient {
         { headers: this.botHeaders },
       );
   
-      return response.json();
+      const result = await response.json();
+      
+      // Add helpful error message for missing groups:read scope
+      if (!result.ok && result.error === "missing_scope") {
+        result.error_help = "To access private channels, add 'groups:read' scope to your Slack app permissions";
+      }
+      
+      return result;
     }
 
     const predefinedChannelIdsArray = predefinedChannelIds.split(",").map((id: string) => id.trim());

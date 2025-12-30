@@ -5,7 +5,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema, } from "@modelcontextpro
 // Tool definitions
 const listChannelsTool = {
     name: "slack_list_channels",
-    description: "List public and private channels in the workspace with pagination",
+    description: "List public and private channels in the workspace with pagination. Requires 'groups:read' scope for private channels.",
     inputSchema: {
         type: "object",
         properties: {
@@ -173,7 +173,12 @@ class SlackClient {
                 params.append("cursor", cursor);
             }
             const response = await fetch(`https://slack.com/api/conversations.list?${params}`, { headers: this.botHeaders });
-            return response.json();
+            const result = await response.json();
+            // Add helpful error message for missing groups:read scope
+            if (!result.ok && result.error === "missing_scope") {
+                result.error_help = "To access private channels, add 'groups:read' scope to your Slack app permissions";
+            }
+            return result;
         }
         const predefinedChannelIdsArray = predefinedChannelIds.split(",").map((id) => id.trim());
         const channels = [];
