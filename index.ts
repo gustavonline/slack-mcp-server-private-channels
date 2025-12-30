@@ -53,7 +53,7 @@ interface GetUserProfileArgs {
 // Tool definitions
 const listChannelsTool: Tool = {
   name: "slack_list_channels",
-  description: "List public or pre-defined channels in the workspace with pagination",
+  description: "List public and private channels in the workspace with pagination",
   inputSchema: {
     type: "object",
     properties: {
@@ -224,7 +224,7 @@ class SlackClient {
     const predefinedChannelIds = process.env.SLACK_CHANNEL_IDS;
     if (!predefinedChannelIds) {
       const params = new URLSearchParams({
-        types: "public_channel",
+        types: "public_channel,private_channel",
         exclude_archived: "true",
         limit: Math.min(limit, 200).toString(),
         team_id: process.env.SLACK_TEAM_ID!,
