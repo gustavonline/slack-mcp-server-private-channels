@@ -138,7 +138,7 @@ const addReactionTool: Tool = {
 
 const getChannelHistoryTool: Tool = {
   name: "slack_get_channel_history",
-  description: "Get recent messages from a channel",
+  description: "Get recent messages from a channel. Requires 'groups:history' scope for private channels.",
   inputSchema: {
     type: "object",
     properties: {
@@ -241,9 +241,9 @@ class SlackClient {
   
       const result = await response.json();
       
-      // Add helpful error message for missing groups:read scope
+      // Add helpful error message for missing scopes
       if (!result.ok && result.error === "missing_scope") {
-        result.error_help = "To access private channels, add 'groups:read' scope to your Slack app permissions";
+        result.error_help = "To access private channels, add 'groups:read' scope. To access private channel history, add 'groups:history' scope to your Slack app permissions";
       }
       
       return result;
@@ -338,7 +338,14 @@ class SlackClient {
       { headers: this.botHeaders },
     );
 
-    return response.json();
+    const result = await response.json();
+    
+    // Add helpful error message for missing groups:history scope
+    if (!result.ok && result.error === "missing_scope") {
+      result.error_help = "To access private channel history, add 'groups:history' scope to your Slack app permissions";
+    }
+    
+    return result;
   }
 
   async getThreadReplies(channel_id: string, thread_ts: string): Promise<any> {
